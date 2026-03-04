@@ -1,9 +1,10 @@
+import { initializeApp } from "@/src/bootstrap/initializeApp";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { Provider as PaperProvider } from "react-native-paper";
 
-
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
 
@@ -11,15 +12,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function prepare() {
-      try {
-        console.log("inside")
-        await new Promise(resolve => setTimeout(resolve, 1500));  
-      } catch (error) {
-        console.warn(error)
-      } finally {
-        setIsReady(true)
-        await SplashScreen.hideAsync()
-      }
+      await initializeApp();
+      setIsReady(true)
+      await SplashScreen.hideAsync();
     }
     prepare()
   }, [])
@@ -31,7 +26,10 @@ export default function RootLayout() {
 
   return (
     <PaperProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="create-habit" options={{ presentation: 'modal' }} />
+      </Stack>
     </PaperProvider>
   );
 }
