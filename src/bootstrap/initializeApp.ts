@@ -1,19 +1,7 @@
-import { getAppData, setAppData } from "../storage/storage";
+import { useHabitStore } from '../store/habitStore';
 
 export async function initializeApp() {
-    const existingData = await getAppData();
-
-    if (!existingData){
-        const initialData = {
-            version: 1,
-            habits: [],
-            setting: {
-                reminderCheckTime:"12:00"
-            }
-        }
-        await setAppData(initialData)
-        console.log("Data initialized")
-    }else {
-        console.log("Data founded")
-    }
+  // Cargar datos desde AsyncStorage al store de Zustand
+  await useHabitStore.getState().loadData();
+  console.log('App initialized with data loaded');
 }
