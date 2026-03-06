@@ -1,7 +1,9 @@
-import { useHabitStore } from '../store/habitStore';
+import { runMigrations } from "../database/migrations";
 
 export async function initializeApp() {
-  // Cargar datos desde AsyncStorage al store de Zustand
-  await useHabitStore.getState().loadData();
-  console.log('App initialized with data loaded');
+  try {
+    await runMigrations()
+  } catch (error) {
+    console.error('Error initializing app:', error);
+  }
 }

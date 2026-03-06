@@ -1,0 +1,77 @@
+import { dbPromise } from "../database/db";
+
+export class HabitRepository {
+
+    static async getHabits() {
+        const db = await dbPromise;
+
+        return await db.getAllAsync(
+            `SELECT * FROM habits`
+        );
+    }
+    
+    static async createHabit(
+        id: string,
+        name: string,
+        days: number[]
+    ) {
+        const db = await dbPromise;
+
+        await db.runAsync(
+            `INSERT INTO habits (id, name, createdAt) VALUES (?, ?, ?)`,
+            id, name, new Date().toISOString()
+        );
+
+        for (const day of days) {
+            await db.runAsync(
+                `INSERT INTO habit_days (habitId, day) VALUES (?, ?)`,
+                id, day
+            );
+        }
+    }
+
+    static async getHabitsDay(day: number) {
+        const db = await dbPromise;
+
+        const habits = await db.getAllAsync(
+            `SELECT h.id, h.name FROM habits h
+            JOIN habit_days hd ON h.id = hd.habitId
+            WHERE hd.day = ?`,
+            day
+        );
+    }
+
+    static async toggleHabitLog(habitId: string, date: string){
+        const db = await dbPromise;
+
+        const existing = await db.getFirstAsync(
+            `SELECT * FROM habit_logs WHERE habitId = ? AND date = ?`,
+            habitId, date
+        );
+
+        if(existing){
+            await db.runAsync(
+                `DELETE FROM habit_logs WHERE habitId = ? AND date = ?`,
+                habitId, date
+            );
+        }else {
+            await db.runAsync(
+                `INSERT INTO habit_logs (habitId, date, completedAt) VALUES (?, ?, ?)`,
+                habitId, date, new Date().toISOString()
+            );
+        }
+    }
+
+    static async isHabitLogged(habitId: string, date: string){
+        const db = await dbPromise;
+
+        const log = await db.getFirstAsync(
+            `SELECT * FROM habit_logs WHERE habitId = ? AND date = ?`,
+            habitId, date
+        );
+
+        return !!log;
+    }
+
+
+}
