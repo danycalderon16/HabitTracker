@@ -2,31 +2,38 @@ import { initializeApp } from "@/src/bootstrap/initializeApp";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { Provider as PaperProvider } from "react-native-paper";
+import { useColorScheme } from "react-native";
+import { MD3DarkTheme, MD3LightTheme, Provider as PaperProvider } from "react-native-paper";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-
   const [isReady, setIsReady] = useState(false);
+  const colorScheme = useColorScheme();
+
+  const theme = colorScheme === 'dark' ? MD3DarkTheme : MD3LightTheme;
 
   useEffect(() => {
     async function prepare() {
       await initializeApp();
-      setIsReady(true)
+      setIsReady(true);
       await SplashScreen.hideAsync();
     }
-    prepare()
-  }, [])
+    prepare();
+  }, []);
   
-  if(!isReady){
+  if (!isReady) {
     return null;
   }
 
-
   return (
-    <PaperProvider>
-      <Stack screenOptions={{ headerShown: false }}>
+    <PaperProvider theme={theme}>
+      <Stack 
+        screenOptions={{ 
+          headerShown: false,
+          contentStyle: { backgroundColor: theme.colors.background }
+        }}
+      >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="create-habit" options={{ presentation: 'modal' }} />
       </Stack>

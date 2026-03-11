@@ -30,10 +30,26 @@ export class HabitRepository {
         }
     }
 
+    static async getAllLogs(){
+        const db = await dbPromise;
+        return await db.getAllAsync(
+            `SELECT * FROM habit_logs`
+        );
+    }
+
+    static async getLogsByDay(date:string){
+        const db = await dbPromise;
+        return await db.getAllAsync(`SELECT h.name
+            FROM habits h 
+            JOIN habit_logs hl ON h.id = hl.habitId
+            WHERE hl.date = ?
+        `, date)
+    }
+
     static async getHabitsDay(day: number) {
         const db = await dbPromise;
 
-        const habits = await db.getAllAsync(
+        return await db.getAllAsync(
             `SELECT h.id, h.name FROM habits h
             JOIN habit_days hd ON h.id = hd.habitId
             WHERE hd.day = ?`,
@@ -48,6 +64,9 @@ export class HabitRepository {
             `SELECT * FROM habit_logs WHERE habitId = ? AND date = ?`,
             habitId, date
         );
+
+        console.log("Habit exists", existing);
+        
 
         if(existing){
             await db.runAsync(
