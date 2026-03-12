@@ -32,7 +32,6 @@ export default function HomeScreen() {
   const handleHabitPress = async (habitId: string) => {
     await HabitRepository.toggleHabitLog(habitId, today);
     
-    // Refresh the completed status
     const isLogged = await HabitRepository.isHabitLogged(habitId, today);
     setCompletedHabits(prev => {
       const newSet = new Set(prev);

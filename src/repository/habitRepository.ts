@@ -1,11 +1,12 @@
 import { dbPromise } from "../database/db";
+import { IHabit, IHabitLogs } from "../types/habit";
 
 export class HabitRepository {
 
-    static async getHabits() {
+    static async getHabits(): Promise<IHabit[]> {
         const db = await dbPromise;
 
-        return await db.getAllAsync(
+        return await db.getAllAsync<IHabit>(
             `SELECT * FROM habits`
         );
     }
@@ -81,6 +82,16 @@ export class HabitRepository {
         }
     }
 
+    // function to get the first day of logs
+    static async getFirstLogDate(): Promise<string>{
+        const db = await dbPromise;
+        const result = await db.getFirstAsync<IHabitLogs>(
+            `SELECT MIN(date) as firstDate FROM habit_logs`
+        );
+        return result?.date ??  new Date().toISOString().split('T')[0];
+    }
+
+
     static async isHabitLogged(habitId: string, date: string){
         const db = await dbPromise;
 
@@ -91,6 +102,7 @@ export class HabitRepository {
 
         return !!log;
     }
+
 
 
 }

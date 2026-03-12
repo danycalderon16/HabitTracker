@@ -1,13 +1,9 @@
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-export interface Habit {
+export interface IHabit {
   id: string;
   name: string;
-  description?: string;
-  activeDays: DayOfWeek[];
-  reminderTime: string; // "HH:mm"
   createdAt: string;
-  color?: string;
 }
 
 export interface HabitCompletion {
@@ -18,8 +14,13 @@ export interface HabitCompletion {
 
 export interface AppData {
   version: string;
-  habits: Habit[];
+  habits: IHabit[];
   completions: HabitCompletion[];
   createdAt: string;
   lastModified: string;
+}
+
+export interface IHabitLogs {
+  habitId: string;
+  date: string
 }
