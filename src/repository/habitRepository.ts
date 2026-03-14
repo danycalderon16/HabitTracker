@@ -1,5 +1,5 @@
 import { dbPromise } from "../database/db";
-import { IHabit, IHabitLogs } from "../types/habit";
+import { IHabit } from "../types/habit";
 
 export class HabitRepository {
 
@@ -85,10 +85,10 @@ export class HabitRepository {
     // function to get the first day of logs
     static async getFirstLogDate(): Promise<string>{
         const db = await dbPromise;
-        const result = await db.getFirstAsync<IHabitLogs>(
+        const result = await db.getFirstAsync<{ firstDate: string }>(
             `SELECT MIN(date) as firstDate FROM habit_logs`
         );
-        return result?.date ??  new Date().toISOString().split('T')[0];
+        return result?.firstDate ?? new Date().toISOString().split('T')[0];
     }
 
 
@@ -103,6 +103,15 @@ export class HabitRepository {
         return !!log;
     }
 
+    // Test method to create a log with a specific date
+    static async createTestLog(habitId: string, date: string) {
+        const db = await dbPromise;
+        
+        await db.runAsync(
+            `INSERT INTO habit_logs (habitId, date, completedAt) VALUES (?, ?, ?)`,
+            habitId, date, new Date().toISOString()
+        );
+    }
 
 
 }

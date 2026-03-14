@@ -13,6 +13,7 @@ export default function HomeScreen() {
   const loadHabits = async () => {
     const habits = await HabitRepository.getHabits();
     setHabits(habits || []);
+    console.log(await HabitRepository.getAllLogs());
     
     // Load completed status for each habit
     const completed = new Set<string>();
