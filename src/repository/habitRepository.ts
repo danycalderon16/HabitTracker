@@ -66,9 +66,6 @@ export class HabitRepository {
             habitId, date
         );
 
-        console.log("Habit exists", existing);
-        
-
         if(existing){
             await db.runAsync(
                 `DELETE FROM habit_logs WHERE habitId = ? AND date = ?`,

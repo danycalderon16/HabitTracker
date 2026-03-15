@@ -11,16 +11,24 @@ export default function StatsScreen() {
   const [statsMap, setStatsMap] = useState<Record<string, any[]>>({});
   const [dates, setDates] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isChanging, setIsChanging] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const scrollTimeoutRef = useRef<number | null>(null);
 
   const generateDates = (firstDate: string): string[] => {
-    const start = new Date(firstDate);
+    // Parse dates as local to avoid timezone issues
+    const [startYear, startMonth, startDay] = firstDate.split('-').map(Number);
+    const start = new Date(startYear, startMonth - 1, startDay);
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to midnight for comparison
+    
     const dateArray: string[] = [];
     
     for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
-      dateArray.push(new Date(d).toISOString().split('T')[0]);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      dateArray.push(dateStr);
     }
     
     return dateArray;
@@ -44,13 +52,6 @@ export default function StatsScreen() {
     setStatsMap(statsData);
   }, []);
 
-  const loadStatsForDate = async (date: string) => {
-    if (!statsMap[date]) {
-      const res = await HabitRepository.getLogsByDay(date);
-      setStatsMap(prev => ({ ...prev, [date]: res || [] }));
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
       loadStats();
@@ -58,41 +59,47 @@ export default function StatsScreen() {
   );
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setIsChanging(true);
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SCREEN_WIDTH);
-    
-    if (index !== currentIndex && index >= 0 && index < dates.length) {
-      setCurrentIndex(index);
-      loadStatsForDate(dates[index]);
+    if (!event.nativeEvent || !event.nativeEvent.contentOffset) {
+      return;
     }
-    setIsChanging(false)
+
+    // Extract values immediately before setTimeout
+    const offsetX = event.nativeEvent.contentOffset.x;
+
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      const index = Math.round(offsetX / SCREEN_WIDTH);
+      
+      if (index !== currentIndex && index >= 0 && index < dates.length) {
+        setCurrentIndex(index);
+      }
+    }, 100);
   };
 
   const goToPrevious = () => {
-    setIsChanging(true)
     if (currentIndex > 0) {
       const newIndex = currentIndex - 1;
       setCurrentIndex(newIndex);
-      loadStatsForDate(dates[newIndex]);
       flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
     }
-    setIsChanging(false);
   };
 
   const goToNext = () => {
-    setIsChanging(true)
     if (currentIndex < dates.length - 1) {
       const newIndex = currentIndex + 1;
       setCurrentIndex(newIndex);
-      loadStatsForDate(dates[newIndex]);
       flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
     }
-    setIsChanging(false);
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // Parse as local date to avoid timezone issues
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    
     return date.toLocaleDateString('en-US', { 
       weekday: 'short', 
       month: 'short', 
@@ -144,10 +151,9 @@ export default function StatsScreen() {
           <Text variant="headlineSmall" style={styles.title}>
             {dates[currentIndex] ? formatDate(dates[currentIndex]) : 'Loading...'}
           </Text>
-          {!isChanging &&
           <Text variant="bodySmall" style={styles.subtitle}>
-             ${currentIndex + 1} of ${dates.length} days
-          </Text>}
+            {currentIndex + 1} of {dates.length} days
+          </Text>
         </View>
         <IconButton
           icon="chevron-right"
